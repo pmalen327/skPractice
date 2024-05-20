@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 from sklearn import svm
+from scipy.stats import wasserstein_distance
 from sklearn.linear_model import SGDClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.experimental import enable_halving_search_cv
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
@@ -23,10 +25,11 @@ y = df.iloc[:,-1:].values.ravel()
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=69)
 
-with ignore_warnings(category=[ConvergenceWarning, FitFailedWarning]): 
+# probably a little cursed, but for a small model it works
+with ignore_warnings(category=(ConvergenceWarning, FitFailedWarning, UserWarning)): 
 
-    names = ['svc', 'sgd classifier']
-    classifiers = [svm.SVC(), SGDClassifier()]
+    names = ['svc', 'sgd classifier', 'knn']
+    classifiers = [svm.SVC(), SGDClassifier(), KNeighborsClassifier()]
 
     svm_params = {
         'C':[.25, .5, 1.0],
@@ -40,14 +43,24 @@ with ignore_warnings(category=[ConvergenceWarning, FitFailedWarning]):
                 'squared_error', 'huber', 'epsilon_intensive', 'squared_epsilon_intensive'],
         'penalty':['l2', 'l1', 'elasticnet'],
         'alpha':[1e-4, 1e-3, 1e-2],
-        'max_iter':[1000, 1500, 2000],
-        'shuffle':[True, False],
+        'max_iter':[1000, 2000, 5000],
         'epsilon':[1e-2, .1, .2, .5],
-        'learning_rate':['constant', 'optimal', 'invscaling', 'adaptive']
+        'learning_rate':['constant', 'optimal', 'invscaling', 'adaptive'],
+        'early_stopping':[True, False]
         }
+    
+    knn_params = {
+        'n_neighbors':[5, 10, 20],
+        'weights':['uniform', 'distance'],
+        'algorithm':['auto', 'ball_tree', 'kd_tree', 'brute'],
+        'leaf_size':[30, 50, 100, 500],
+        'p':[1, 2, 3],
+        'metric':['minkowski', 'wasserstein_distance'],
+        'n_jobs':[-1]
+    }
 
-    parameters = [svm_params, sgd_params]
+    parameters = [svm_params, sgd_params, knn_params]
 
     for i in range(len(classifiers)):
         search = HalvingGridSearchCV(classifiers[i], parameters[i], random_state=69).fit(X,y)
-        print(f'{names[i]} achieved an accuracy of {round(search.best_score_, 4)} \n with the parameters:{search.best_params_}')
+        print(f'{names[i]} achieved a peak accuracy of {round(search.best_score_, 4)} \n with the parameters:{search.best_params_}')
