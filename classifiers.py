@@ -7,6 +7,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.experimental import enable_halving_search_cv
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils._testing import ignore_warnings 
 from sklearn.exceptions import FitFailedWarning, ConvergenceWarning 
 from sklearn.model_selection import GridSearchCV 
@@ -22,6 +23,8 @@ df = pd.read_csv('data.csv')
 categories = list(df.columns)
 X = df.drop('target', axis=1)
 y = df.iloc[:,-1:].values.ravel()
+min_max_scaler = MinMaxScaler()
+X = min_max_scaler.fit_transform(X)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=69)
 
@@ -45,6 +48,7 @@ with ignore_warnings(category=(ConvergenceWarning, FitFailedWarning, UserWarning
         'alpha':[1e-4, 1e-3, 1e-2],
         'max_iter':[1000, 2000, 5000],
         'epsilon':[1e-2, .1, .2, .5],
+        'n_jobs':[-1],
         'learning_rate':['constant', 'optimal', 'invscaling', 'adaptive'],
         'early_stopping':[True, False]
         }
@@ -62,5 +66,5 @@ with ignore_warnings(category=(ConvergenceWarning, FitFailedWarning, UserWarning
     parameters = [svm_params, sgd_params, knn_params]
 
     for i in range(len(classifiers)):
-        search = HalvingGridSearchCV(classifiers[i], parameters[i], random_state=69).fit(X,y)
+        search = GridSearchCV(classifiers[i], parameters[i]).fit(X,y)
         print(f'{names[i]} achieved a peak accuracy of {round(search.best_score_, 4)} \n with the parameters:{search.best_params_}')
