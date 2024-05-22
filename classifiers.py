@@ -4,15 +4,12 @@ from sklearn import svm
 from scipy.stats import wasserstein_distance
 from sklearn.linear_model import SGDClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.experimental import enable_halving_search_cv
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils._testing import ignore_warnings 
 from sklearn.exceptions import FitFailedWarning, ConvergenceWarning 
 from sklearn.model_selection import GridSearchCV 
-from sklearn.model_selection import HalvingGridSearchCV
-from sklearn.model_selection import HalvingRandomSearchCV
 
 
 # 1 = heart disease
