@@ -13,6 +13,7 @@ from sklearn.exceptions import FitFailedWarning, ConvergenceWarning
 from sklearn.model_selection import GridSearchCV 
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
+from sklearn.neural_network import MLPClassifier
 
 # 1 = heart disease
 # 0 = healthy
@@ -29,8 +30,9 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_
 # probably a little cursed, but for a small model it works
 with ignore_warnings(category=(ConvergenceWarning, FitFailedWarning, UserWarning)): 
 
-    names = ['svc', 'sgd classifier', 'knn', 'dtc', 'ada boost']
-    classifiers = [svm.SVC(), SGDClassifier(), KNeighborsClassifier(), DecisionTreeClassifier(), AdaBoostClassifier()]
+    names = ['svc', 'sgd classifier', 'knn', 'dtc', 'ada boost', 'mlp']
+    classifiers = [svm.SVC(), SGDClassifier(), KNeighborsClassifier(), DecisionTreeClassifier(),
+                    AdaBoostClassifier(), MLPClassifier()]
 
     svm_params = {
         'C':[.25, .5, 1.0],
@@ -71,12 +73,18 @@ with ignore_warnings(category=(ConvergenceWarning, FitFailedWarning, UserWarning
 
     ada_params = {
         'n_estimators':[10, 25, 35, 50],
-        'learning_rate':[1e-2, .1, 1, 3]
+        'learning_rate':[1e-2, .1, 1, 3],
+        'algorithm':'SAMME'
     }
 
+    mlp_params = {
+        'hidden_layer_sizes':[(50,), (100,), (200,)],
+        'activation':['identity', 'logistic', 'tanh', 'relu'],
+        'solver':['lbfgs', 'sgd', 'adam']
+    }
 
-    parameters = [svm_params, sgd_params, knn_params, dtc_params, ada_params]
+    parameters = [svm_params, sgd_params, knn_params, dtc_params, ada_params, mlp_params]
 
     for i in range(len(classifiers)):
         search = GridSearchCV(classifiers[i], parameters[i]).fit(X,y)
-        print(f'{names[i]} achieved a peak accuracy of {round(search.best_score_, 4)} \n with the parameters:{search.best_params_}')
+        print(f'{names[i]} achieved a peak accuracy of {round(search.best_score_, 5)} \n with the parameters:{search.best_params_}')
